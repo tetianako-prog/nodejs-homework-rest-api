@@ -14,6 +14,7 @@ const schemaCreateContact = Joi.object({
     })
     .required(),
   phone: phoneNumberJoi.string().phoneNumber().required(),
+  favorite: Joi.boolean().optional(),
 })
 
 const schemaUpdateContact = Joi.object({
@@ -29,6 +30,7 @@ const schemaUpdateContact = Joi.object({
     })
     .optional(),
   phone: phoneNumberJoi.string().phoneNumber().optional(),
+  favorite: Joi.boolean().optional(),
 })
 
 const validate = (schema, body, next) => {
