@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 3000
 const uriDb = process.env.DB_HOST
 
 const connection = mongoose.connect(uriDb, {
-  promiseLibrary: global.Promise,
+  // promiseLibrary: global.Promise,
   useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true,
