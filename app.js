@@ -12,7 +12,9 @@ app.use(cors())
 app.use(express.json())
 
 const routerApi = require('./api')
-app.use('/api', routerApi)
+require('./config/config-passport')
+app.use('/api/contacts', routerApi.contacts)
+app.use('/api/users', routerApi.users)
 
 app.use((_, res, __) => {
   res.status(404).json({
