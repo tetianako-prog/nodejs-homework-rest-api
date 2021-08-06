@@ -2,7 +2,11 @@ const { usersService } = require('../service')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const secret = process.env.SECRET
+const fs = require('fs').promises
+const path = require('path')
+const jimp = require('jimp')
 
+const AVATARS_DIR = path.join(__dirname, '../', 'public', 'avatars')
 const signup = async (req, res, next) => {
   const { email, password, subscription } = req.body
   const user = await usersService.findUser(email)
@@ -75,7 +79,43 @@ const getCurrent = async (req, res, next) => {
 const logout = async (req, res, next) => {
   const { id } = req.user
   await usersService.updateToken(id, null)
-  return res.status(204).json({})
+  return res.status(204)
+}
+
+const avatar = async (req, res, next) => {
+  console.log(req.file)
+  const { id } = req.user
+  console.log(id)
+  if (req.file) {
+    const { file } = req
+    const img = await jimp.read(file.path)
+    await img
+      .autocrop()
+      .cover(
+        250,
+        250,
+        jimp.HORIZONTAL_ALIGN_CENTER || jimp.VERTICAL_ALIGN_MIDDLE,
+      )
+      .writeAsync(file.path)
+    await fs.rename(
+      file.path,
+      path.join(AVATARS_DIR, `${id}.${file.originalname.split('.')[1]}`),
+    )
+
+    const url = path.join(
+      'public/avatars/',
+      `${id}.${file.originalname.split('.')[1]}`,
+    )
+    const user = await usersService.updateUserAvatar(id, url)
+    res.json({
+      message: 'Файл успешно загружен',
+      status: 'success',
+      code: 200,
+      data: {
+        avatarURL: user.avatarURL,
+      },
+    })
+  }
 }
 
 module.exports = {
@@ -83,4 +123,5 @@ module.exports = {
   login,
   getCurrent,
   logout,
+  avatar,
 }

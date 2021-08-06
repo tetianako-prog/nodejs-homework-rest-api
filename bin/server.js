@@ -1,11 +1,9 @@
 const app = require('../app')
 const mongoose = require('mongoose')
-
 const PORT = process.env.PORT || 3000
 const uriDb = process.env.DB_HOST
 
 const connection = mongoose.connect(uriDb, {
-  // promiseLibrary: global.Promise,
   useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true,
@@ -14,7 +12,7 @@ const connection = mongoose.connect(uriDb, {
 
 connection
   .then(() => {
-    app.listen(PORT, function () {
+    app.listen(PORT, async function () {
       console.log(`Server running. Use our API on port: ${PORT}`)
     })
   })
