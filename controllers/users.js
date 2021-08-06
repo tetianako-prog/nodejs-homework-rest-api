@@ -79,7 +79,7 @@ const getCurrent = async (req, res, next) => {
 const logout = async (req, res, next) => {
   const { id } = req.user
   await usersService.updateToken(id, null)
-  return res.status(204)
+  return res.status(204).json({})
 }
 
 const avatar = async (req, res, next) => {
