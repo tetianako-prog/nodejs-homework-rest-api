@@ -14,8 +14,19 @@ const updateToken = (id, token) => {
   return User.updateOne({ _id: id }, { token })
 }
 
+const updateUserAvatar = (userId, url) => {
+  return User.findOneAndUpdate(
+    { _id: userId },
+    { avatarURL: url },
+    {
+      new: true,
+    },
+  )
+}
+
 module.exports = {
   findUser,
   createUser,
   updateToken,
+  updateUserAvatar,
 }
