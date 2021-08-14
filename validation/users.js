@@ -4,24 +4,35 @@ const schemaCreateUser = Joi.object({
   email: Joi.string()
     .email({
       minDomainSegments: 2,
-      tlds: { allow: ['com', 'net'] },
+      tlds: { allow: ['com', 'net', 'ua'] },
     })
     .required(),
   password: Joi.string()
     .pattern(/^[a-zA-Z0-9]{3,30}$/)
     .required(),
   subscription: Joi.string().valid('starter', 'pro', 'business').optional(),
+  verify: Joi.boolean(),
+  verifyToken: Joi.string(),
 })
 
 const schemaLoginUser = Joi.object({
   email: Joi.string()
     .email({
       minDomainSegments: 2,
-      tlds: { allow: ['com', 'net'] },
+      tlds: { allow: ['com', 'net', 'ua'] },
     })
     .required(),
   password: Joi.string()
     .pattern(/^[a-zA-Z0-9]{3,30}$/)
+    .required(),
+})
+
+const schemaVerificationUser = Joi.object({
+  email: Joi.string()
+    .email({
+      minDomainSegments: 2,
+      tlds: { allow: ['com', 'net', 'ua'] },
+    })
     .required(),
 })
 
@@ -44,4 +55,8 @@ module.exports.validateCreateUser = (req, res, next) => {
 
 module.exports.validateLoginUser = (req, res, next) => {
   return validate(schemaLoginUser, req.body, next)
+}
+
+module.exports.validateVerificationUser = (req, res, next) => {
+  return validate(schemaVerificationUser, req.body, next)
 }
