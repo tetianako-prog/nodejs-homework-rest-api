@@ -1,10 +1,14 @@
 const { usersService } = require('../service')
+const { nanoid } = require('nanoid')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const secret = process.env.SECRET
 const fs = require('fs').promises
 const path = require('path')
 const jimp = require('jimp')
+
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_KEY)
 
 const AVATARS_DIR = path.join(__dirname, '../', 'public', 'avatars')
 const signup = async (req, res, next) => {
@@ -19,7 +23,22 @@ const signup = async (req, res, next) => {
     })
   }
   try {
-    const result = await usersService.createUser(email, password, subscription)
+    const verifyToken = nanoid()
+    const result = await usersService.createUser(
+      email,
+      password,
+      subscription,
+      verifyToken,
+    )
+    const msg = {
+      to: result.email,
+      from: 'tanja254@ukr.net',
+      subject: 'Email verification',
+      text: 'Email verification',
+      html: `<a href="http://localhost:3000/api/users/verify/${verifyToken}">Verify email</a>`,
+    }
+
+    await sgMail.send(msg)
     res.status(201).json({
       status: 'success',
       code: 201,
@@ -39,7 +58,7 @@ const signup = async (req, res, next) => {
 const login = async (req, res, next) => {
   const { email, password } = req.body
   const user = await usersService.findUser(email)
-  if (!user || !user.validPassword(password)) {
+  if (!user || !user.validPassword(password) || !user.verify) {
     return res.status(401).json({
       status: 'error',
       code: 401,
@@ -118,10 +137,75 @@ const avatar = async (req, res, next) => {
   }
 }
 
+const verify = async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params
+    const user = await usersService.findUserByField(verificationToken)
+
+    if (user) {
+      await usersService.updateVerify(user._id, true, null)
+      return res.json({
+        status: 'success',
+        code: 200,
+        message: 'Verification successful',
+      })
+    }
+    return res.status(404).json({
+      status: 'error',
+      code: 404,
+      message: 'User not found',
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+const repeatVerification = async (req, res, next) => {
+  try {
+    const { email } = req.body
+    const user = await usersService.findUser(email)
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        code: 404,
+        message: 'User not found',
+      })
+    }
+    const { verify, verifyToken } = user
+    if (!verify) {
+      const msg = {
+        to: email,
+        from: 'tanja254@ukr.net',
+        subject: 'Email verification',
+        text: 'Email verification',
+        html: `<a href="http://localhost:3000/api/users/verify/${verifyToken}">Verify email</a>`,
+      }
+
+      await sgMail.send(msg)
+      return res.json({
+        status: 'success',
+        code: 200,
+        data: {
+          message: 'Verification email sent',
+        },
+      })
+    }
+    return res.status(400).json({
+      status: 'error',
+      code: 400,
+      message: 'Verification has already been passed',
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
 module.exports = {
   signup,
   login,
   getCurrent,
   logout,
   avatar,
+  verify,
+  repeatVerification,
 }
